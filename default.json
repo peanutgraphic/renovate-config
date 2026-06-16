@@ -11,6 +11,7 @@
     "labels": ["security"],
     "schedule": ["at any time"]
   },
+  "osvVulnerabilityAlerts": true,
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch"],
