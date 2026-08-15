@@ -1,0 +1,80 @@
+schema_version: 1
+project:
+  id: renovate-config
+  name: RENOVATE-CONFIG
+  classification: library
+  repository: https://github.com/peanutgraphic/renovate-config.git
+  lifecycle: active
+ownership:
+  platform: Peanut Graphic
+  deployment: Peanut Graphic
+  rollback: Peanut Graphic
+environments:
+  - name: production
+    kind: production
+    provider: Public GitHub repository resolved by Renovate consumers
+    url: https://github.com/peanutgraphic/renovate-config
+runtimes:
+  - name: other
+    baseline: Renovate-hosted configuration schema and preset resolver
+    declarations:
+      - { scope: dependency, source: default.json, value: "Extends config:recommended and enables scheduled, grouped, vulnerability-aware dependency PRs" }
+      - { scope: dependency, source: automerge.json, value: "Extends the mutable default preset and enables CI-dependent automerge for selected update classes" }
+      - { scope: documentation, source: README.md, value: "Consumers select default or automerge through local>peanutgraphic/renovate-config references" }
+    production_observation: { status: unverified }
+databases: []
+services:
+  - kind: other
+    baseline: Shared Renovate policy consumed directly from GitHub
+    declarations:
+      - { scope: release, source: README.md, value: "Policy changes on main are inherited by consumer repositories on their next Renovate run" }
+      - { scope: dependency, source: default.json, value: "Weekly dependency PR schedule plus immediate vulnerability-alert processing" }
+      - { scope: dependency, source: automerge.json, value: "Automerge for patch, pin, digest, dev-dependency minor/patch, and lockfile maintenance updates" }
+    production_observation: { status: unverified }
+distribution:
+  mode: manual
+  source_of_truth: default.json and automerge.json on the default branch
+  versioned_artifact: "no"
+  signed: "no"
+  canary: "no"
+  rollback: "no"
+exceptions:
+  - id: PAR-005
+    concern: Fleet dependency policy is distributed from mutable main without immutable release or rollback evidence
+    reason: Consumer repositories reference local>peanutgraphic/renovate-config or its automerge preset without a tag or commit. This public repository has no tags or GitHub Releases, so every consumer can inherit the next main change on a later Renovate run and no repository-visible rollback or canary contract identifies a last-known-good policy.
+    risk: One incorrect preset merge can alter dependency PR grouping, vulnerability handling, or automerge behavior across many repositories at different times without a reproducible fleet policy version.
+    owner: Peanut Graphic
+    verification: Publish immutable reviewed preset versions, migrate consumers to an explicit approved version or independently recorded digest, canary changes in representative strong/thin CI repositories, and rehearse a fleet rollback before advancing the default.
+    review_date: "2026-11-14"
+    status: proposed
+  - id: PAR-503
+    concern: The shared control-plane repository has no required validation or review gate
+    reason: The repository has no GitHub Actions workflow and main is unprotected. JSON syntax can be checked locally, but no required check validates Renovate semantics, extends resolution, or the automerge promise before a policy merge.
+    risk: A syntactically valid but unsupported or unsafe rule can reach every opted-in consumer, including repositories whose claimed CI gate is missing or ineffective.
+    owner: Peanut Graphic
+    verification: Add required official Renovate config validation, resolve both presets in an isolated fixture, exercise automerge decisions against protected and unprotected consumer fixtures, require review and checks on main, and fail closed when an automerge consumer has no qualifying status gate.
+    review_date: "2026-08-21"
+    status: proposed
+  - id: PAR-505
+    concern: The central preset does not encode the approved fleet runtime and image lanes
+    reason: The current rules group all non-major and development updates but do not define the program's Node, PHP, database, Docker tag/digest, or phased compatibility policies.
+    risk: Generic update grouping can propose or automerge dependencies independently of the platform baselines and recreate runtime or container drift the parity program is intended to prevent.
+    owner: Peanut Graphic
+    verification: Add tested manager- and datasource-specific rules for approved runtime, package-manager, database, and Docker lanes after live inventory and compatibility matrices are complete; prove representative consumer PR behavior before fleet adoption.
+    review_date: "2026-11-14"
+    status: proposed
+verification:
+  status: source-audited
+  audited_commit: f32e80f47db758a369f8167e48a25fcbda496ed0
+  last_reviewed: "2026-08-14"
+  sources:
+    - README.md
+    - default.json
+    - automerge.json
+    - GitHub repository, branch-protection, tag, release, and workflow metadata
+    - Fleet renovate.json consumer references
+  outstanding:
+    - Add immutable preset provenance, representative canarying, and fleet rollback under PAR-005.
+    - Add required semantic validation, review, branch protection, and fail-closed automerge consumer checks under PAR-503.
+    - Encode approved runtime, database, and Docker lanes after PAR-003 and compatibility work under PAR-505.
+    - Verify the live Renovate installation, application permissions, consumer schedules, and inherited preset revisions read-only before changing any external account.
