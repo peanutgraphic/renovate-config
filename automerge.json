@@ -7,8 +7,8 @@
   },
   "packageRules": [
     {
-      "description": "Auto-merge patch + pin + digest updates after status checks pass",
-      "matchUpdateTypes": ["patch", "pin", "digest"],
+      "description": "Auto-merge patch + pin updates after status checks pass. NOTE: `digest` was deliberately removed from this list — digest-pinned container images are the immutability contract for production-classified stacks (PAR-209), and moving one is an approved rollout with snapshot, canary and rollback, not a bot merge. Digest PRs are still raised; a person merges them.",
+      "matchUpdateTypes": ["patch", "pin"],
       "automerge": true
     },
     {
