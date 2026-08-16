@@ -1,0 +1,72 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Approved Peanut runtime and container image lanes (PAR-505). A lane is a program decision recorded in the parity tracker's Decision Log, not a dependency update — so Renovate surfaces lane changes for an explicit human decision instead of opening them as routine PRs.",
+  "packageRules": [
+    {
+      "description": "Node and npm: the lane is major 22 LTS. Crossing it is a fleet decision (parity Decision Log, 2026-08-13). Surface on the dependency dashboard; never open or auto-merge silently.",
+      "matchDatasources": ["docker", "node-version", "npm"],
+      "matchPackageNames": ["node", "npm", "**/node"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true,
+      "automerge": false,
+      "addLabels": ["lane-change"]
+    },
+    {
+      "description": "PHP, MariaDB and ClickHouse: the lane is pinned at MINOR granularity (PHP 8.4, MariaDB 11.4 LTS, ClickHouse 25.12), so a minor bump already leaves the approved lane. PHP 8.4 is the Laravel lane (PAR-202); MariaDB 11.4 is the default server-backed transactional lane (PAR-302).",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "php",
+        "mariadb",
+        "clickhouse/clickhouse-server",
+        "**/php",
+        "**/mariadb",
+        "**/clickhouse-server"
+      ],
+      "matchUpdateTypes": ["major", "minor"],
+      "dependencyDashboardApproval": true,
+      "automerge": false,
+      "addLabels": ["lane-change"]
+    },
+    {
+      "description": "MySQL, PostgreSQL, Redis and MinIO: the lane is pinned at MAJOR granularity. MySQL 8 is a time-bounded compatibility exception (PAR-302); PostgreSQL 16/17 and the Langfuse stack are architecture-specific exceptions (PAR-209, PAR-302).",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "mysql",
+        "postgres",
+        "redis",
+        "minio/minio",
+        "**/mysql",
+        "**/postgres",
+        "**/redis",
+        "**/minio"
+      ],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true,
+      "automerge": false,
+      "addLabels": ["lane-change"]
+    },
+    {
+      "description": "Keep every Node declaration moving together. Repositories now cross-check engines.node, packageManager, .nvmrc, CI setup-node and container base images in a fail-closed runtime contract, so a bump that lands in only one of them turns CI red. Grouping them into one branch is what makes an in-lane Node update mergeable at all.",
+      "matchDatasources": ["docker", "node-version", "npm"],
+      "matchPackageNames": ["node", "npm", "**/node"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "node runtime lane",
+      "groupSlug": "node-runtime-lane"
+    },
+    {
+      "description": "Same reasoning for PHP: composer config.platform, CI php-version and the container base image are cross-checked, so in-lane PHP patches must move as one branch.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["php", "**/php"],
+      "matchUpdateTypes": ["patch"],
+      "groupName": "php runtime lane",
+      "groupSlug": "php-runtime-lane"
+    },
+    {
+      "description": "Never auto-merge a container image digest. Digest-pinned images are the immutability contract for production-classified stacks (PAR-209), and the approved rollout for changing one requires snapshot, canary and rollback that a dependency bot cannot perform. The update is still raised — it just needs a person.",
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["digest"],
+      "automerge": false,
+      "addLabels": ["image-digest"]
+    }
+  ]
+}

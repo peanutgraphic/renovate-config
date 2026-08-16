@@ -1,0 +1,16 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Generic batching of ordinary dependency updates. Extracted from default.json so that the runtime-lane rules can be extended AFTER it: Renovate merges presets left-to-right and the LAST matching packageRule wins, so a broad group defined after a lane rule would silently swallow it.",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "non-major dependencies",
+      "groupSlug": "all-minor-patch"
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "groupName": "dev dependencies",
+      "groupSlug": "dev-deps"
+    }
+  ]
+}

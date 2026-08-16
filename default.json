@@ -1,6 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended",
+    "local>peanutgraphic/renovate-config:grouping",
+    "local>peanutgraphic/renovate-config:runtime-lanes"
+  ],
   "semanticCommits": "enabled",
   "dependencyDashboard": true,
   "labels": ["dependencies", "renovate"],
@@ -11,17 +15,5 @@
     "labels": ["security"],
     "schedule": ["at any time"]
   },
-  "osvVulnerabilityAlerts": true,
-  "packageRules": [
-    {
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "non-major dependencies",
-      "groupSlug": "all-minor-patch"
-    },
-    {
-      "matchDepTypes": ["devDependencies"],
-      "groupName": "dev dependencies",
-      "groupSlug": "dev-deps"
-    }
-  ]
+  "osvVulnerabilityAlerts": true
 }

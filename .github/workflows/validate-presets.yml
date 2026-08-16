@@ -1,0 +1,58 @@
+name: validate-presets
+
+# This repository is a fleet control plane: every repo that extends
+# `local>peanutgraphic/renovate-config` picks up whatever is on main at its next
+# Renovate run. Until now nothing validated that, so a malformed preset would
+# reach the whole fleet and only surface as Renovate silently erroring per-repo.
+#
+# Public repository — GitHub-hosted runners. The organisation self-hosted runner
+# group rejects public repositories.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Renovate presets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.22.2'
+
+      # Pinned, not floating: a validator that changes under us would mean a
+      # green run here proves something different from the last green run.
+      # Renovate itself keeps this current via the `node`/npm lane rules.
+      - name: Validate every preset (strict)
+        run: |
+          npx --yes --package renovate@44.30.4 renovate-config-validator --strict \
+            default.json \
+            grouping.json \
+            runtime-lanes.json \
+            automerge.json
+
+      # The presets above are only ever consumed merged. Validating them
+      # individually would not catch a rule that is valid alone but invalid in
+      # the combined shape a consumer actually resolves.
+      - name: Validate the resolved consumer shape
+        run: |
+          python3 scripts/build-merged-config.py /tmp/merged
+          npx --yes --package renovate@44.30.4 renovate-config-validator --strict \
+            /tmp/merged/renovate.json
+
+      # A lane rule that matches nothing is the failure mode this whole preset
+      # exists to prevent: it reads as enforcement and enforces nothing.
+      - name: Prove the lane rules still bind
+        run: python3 scripts/test-runtime-lanes.py
